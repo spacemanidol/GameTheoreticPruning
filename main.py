@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import torch.nn.utils.prune as prune
 import torch.backends.cudnn as cudnn
 
 import torchvision
@@ -112,7 +113,102 @@ def format_time(seconds):
         f = '0ms'
     return f
 
+""" Prune stuff
+new_model = LeNet()
+for name, module in new_model.named_modules():
+    # prune 20% of connections in all 2D-conv layers 
+    if isinstance(module, torch.nn.Conv2d):
+        prune.l1_unstructured(module, name='weight', amount=0.2)
+    # prune 40% of connections in all linear layers 
+    elif isinstance(module, torch.nn.Linear):
+        prune.l1_unstructured(module, name='weight', amount=0.4)
+parameters_to_prune = (
+    (model.conv1, 'weight'),
+    (model.conv2, 'weight'),
+    (model.fc1, 'weight'),
+    (model.fc2, 'weight'),
+    (model.fc3, 'weight'),
+)
 
+prune.global_unstructured(
+    parameters_to_prune,
+    pruning_method=prune.L1Unstructured,
+    amount=0.2,
+)
+class FooBarPruningMethod(prune.BasePruningMethod):
+    """"""Prune every other entry in a tensor
+    """"""
+    PRUNING_TYPE = 'unstructured'
+
+    def compute_mask(self, t, default_mask):
+        mask = default_mask.clone()
+        mask.view(-1)[::2] = 0 
+        return mask
+def foobar_unstructured(module, name):
+    """"""Prunes tensor corresponding to parameter called `name` in `module`
+    by removing every other entry in the tensors.
+    Modifies module in place (and also return the modified module) 
+    by:
+    1) adding a named buffer called `name+'_mask'` corresponding to the 
+    binary mask applied to the parameter `name` by the pruning method.
+    The parameter `name` is replaced by its pruned version, while the 
+    original (unpruned) parameter is stored in a new parameter named 
+    `name+'_orig'`.
+
+    Args:
+        module (nn.Module): module containing the tensor to prune
+        name (string): parameter name within `module` on which pruning
+                will act.
+
+    Returns:
+        module (nn.Module): modified (i.e. pruned) version of the input
+            module
+    
+    Examples:
+        >>> m = nn.Linear(3, 4)
+        >>> foobar_unstructured(m, name='bias')
+    """"""
+    FooBarPruningMethod.apply(module, name)
+    return module
+foobar_unstructured(model.fc3, name='bias')
+
+
+
+"""
+parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
+parser.add_argument('--arch', '-a', metavar='ARCH', default='vgg19',
+                    choices=model_names,
+                    help='model architecture: ' + ' | '.join(model_names) +
+                    ' (default: vgg19)')
+parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+                    help='number of data loading workers (default: 4)')
+parser.add_argument('--epochs', default=300, type=int, metavar='N',
+                    help='number of total epochs to run')
+parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
+                    help='manual epoch number (useful on restarts)')
+parser.add_argument('-b', '--batch-size', default=128, type=int,
+                    metavar='N', help='mini-batch size (default: 128)')
+parser.add_argument('--lr', '--learning-rate', default=0.05, type=float,
+                    metavar='LR', help='initial learning rate')
+parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
+                    help='momentum')
+parser.add_argument('--weight-decay', '--wd', default=5e-4, type=float,
+                    metavar='W', help='weight decay (default: 5e-4)')
+parser.add_argument('--print-freq', '-p', default=20, type=int,
+                    metavar='N', help='print frequency (default: 20)')
+parser.add_argument('--resume', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
+parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+                    help='evaluate model on validation set')
+parser.add_argument('--pretrained', dest='pretrained', action='store_true',
+                    help='use pre-trained model')
+parser.add_argument('--half', dest='half', action='store_true',
+                    help='use half-precision(16-bit) ')
+parser.add_argument('--cpu', dest='cpu', action='store_true',
+                    help='use cpu')
+parser.add_argument('--save-dir', dest='save_dir',
+                    help='The directory used to save the trained models',
+                    default='save_temp', type=str)
 parser = argparse.ArgumentParser(description='Adversarial Prunning Experiments')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('-resume', action='store_true', help='resume')
