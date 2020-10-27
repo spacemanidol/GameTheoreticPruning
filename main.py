@@ -14,6 +14,10 @@ import math
 import os
 import argparse
 
+#Logging Of Model
+import wandb
+wandb.init(project="game-theorectic-pruning")
+
 #models
 import efficientnet
 import resnet
@@ -21,31 +25,19 @@ from vgg import VGG
 import lenet
 import dpn
 
-"""
-mean = {
-'cifar10': (0.4914, 0.4822, 0.4465),
-'cifar100': (0.5071, 0.4867, 0.4408),
-}
-
-std = {
-'cifar10': (0.2023, 0.1994, 0.2010), should be 0.2470, 0.2435, 0.2616
-'cifar100': (0.2675, 0.2565, 0.2761),
-}
-"""
 _, term_width = os.popen('stty size', 'r').read().split()
 term_width = int(term_width)
 
 TOTAL_BAR_LENGTH = 65.
 last_time = time.time()
 begin_time = last_time
+
 def progress_bar(current, total, msg=None):
     global last_time, begin_time
     if current == 0:
         begin_time = time.time()  # Reset for new bar.
-
     cur_len = int(TOTAL_BAR_LENGTH*current/total)
     rest_len = int(TOTAL_BAR_LENGTH - cur_len) - 1
-
     sys.stdout.write(' [')
     for i in range(cur_len):
         sys.stdout.write('=')
@@ -91,7 +83,6 @@ def format_time(seconds):
     secondsf = int(seconds)
     seconds = seconds - secondsf
     millis = int(seconds*1000)
-
     f = ''
     i = 1
     if days > 0:
@@ -136,38 +127,14 @@ prune.global_unstructured(
     amount=0.2,
 )
 class FooBarPruningMethod(prune.BasePruningMethod):
-    """"""Prune every other entry in a tensor
-    """"""
-    PRUNING_TYPE = 'unstructured'
+
 
     def compute_mask(self, t, default_mask):
         mask = default_mask.clone()
         mask.view(-1)[::2] = 0 
         return mask
 def foobar_unstructured(module, name):
-    """"""Prunes tensor corresponding to parameter called `name` in `module`
-    by removing every other entry in the tensors.
-    Modifies module in place (and also return the modified module) 
-    by:
-    1) adding a named buffer called `name+'_mask'` corresponding to the 
-    binary mask applied to the parameter `name` by the pruning method.
-    The parameter `name` is replaced by its pruned version, while the 
-    original (unpruned) parameter is stored in a new parameter named 
-    `name+'_orig'`.
 
-    Args:
-        module (nn.Module): module containing the tensor to prune
-        name (string): parameter name within `module` on which pruning
-                will act.
-
-    Returns:
-        module (nn.Module): modified (i.e. pruned) version of the input
-            module
-    
-    Examples:
-        >>> m = nn.Linear(3, 4)
-        >>> foobar_unstructured(m, name='bias')
-    """"""
     FooBarPruningMethod.apply(module, name)
     return module
 foobar_unstructured(model.fc3, name='bias')
@@ -175,160 +142,125 @@ foobar_unstructured(model.fc3, name='bias')
 
 
 """
-parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='vgg19',
-                    choices=model_names,
-                    help='model architecture: ' + ' | '.join(model_names) +
-                    ' (default: vgg19)')
-parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
-                    help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=300, type=int, metavar='N',
-                    help='number of total epochs to run')
-parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
-                    help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=128, type=int,
-                    metavar='N', help='mini-batch size (default: 128)')
-parser.add_argument('--lr', '--learning-rate', default=0.05, type=float,
-                    metavar='LR', help='initial learning rate')
-parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
-                    help='momentum')
-parser.add_argument('--weight-decay', '--wd', default=5e-4, type=float,
-                    metavar='W', help='weight decay (default: 5e-4)')
-parser.add_argument('--print-freq', '-p', default=20, type=int,
-                    metavar='N', help='print frequency (default: 20)')
-parser.add_argument('--resume', default='', type=str, metavar='PATH',
-                    help='path to latest checkpoint (default: none)')
-parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-                    help='evaluate model on validation set')
-parser.add_argument('--pretrained', dest='pretrained', action='store_true',
-                    help='use pre-trained model')
-parser.add_argument('--half', dest='half', action='store_true',
-                    help='use half-precision(16-bit) ')
-parser.add_argument('--cpu', dest='cpu', action='store_true',
-                    help='use cpu')
-parser.add_argument('--save-dir', dest='save_dir',
-                    help='The directory used to save the trained models',
-                    default='save_temp', type=str)
-parser = argparse.ArgumentParser(description='Adversarial Prunning Experiments')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-parser.add_argument('-resume', action='store_true', help='resume')
-args = parser.parse_args()
+def load_cifar_10(target_batch_size, target_num_workers): 
+    print('Loading CIFAR 10 Data')
+    transform_train = transforms.Compose([transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),])
+    transform_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2675, 0.2565, 0.2761)),])
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train) 
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=target_batch_size, shuffle=True, num_workers=target_num_workers)
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=target_num_workers)
+    return trainloader, testloader
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-best_acc = 0  # best test accuracy
-start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+def load_cifar_100(target_batch_size, target_num_workers): 
+    print('Loading CIFAR 100 Data')
+    transform_train = transforms.Compose([transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),])
+    transform_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),])
+    trainset = torchvision.datasets.CIFAR100(root='./data', train=True, download=True, transform=transform_train) 
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=target_batch_size, shuffle=True, num_workers=target_num_workers)
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=target_num_workers)
+    return trainloader, testloader
 
-print('==> Preparing data..')
-transform_train = transforms.Compose([
-    transforms.RandomCrop(32, padding=4),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-])
-
-transform_test = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-])
-
-trainset = torchvision.datasets.CIFAR10(
-    root='./data', train=True, download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=128, shuffle=True, num_workers=2)
-
-testset = torchvision.datasets.CIFAR10(
-    root='./data', train=False, download=True, transform=transform_test)
-testloader = torch.utils.data.DataLoader(
-    testset, batch_size=100, shuffle=False, num_workers=2)
-
-classes = ('plane', 'car', 'bird', 'cat', 'deer',
-           'dog', 'frog', 'horse', 'ship', 'truck')
-
-# Model
-print('==> Building model..')
-net = VGG('VGG16') #aka vgg.py
-# net = LeNet() # aka lenet.pu
-# net = ResNet50() #aka resnet.py
-# net = DPN92() #aka dpn.py
-# net = EfficientNet() # aka efficientnet.py
-net = net.to(device)
-if device == 'cuda':
-    net = torch.nn.DataParallel(net)
-    cudnn.benchmark = True
-
-if args.resume:
-    # Load checkpoint.
-    print('==> Resuming from checkpoint..')
-    assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/ckpt.pth')
-    net.load_state_dict(checkpoint['net'])
-    best_acc = checkpoint['acc']
-    start_epoch = checkpoint['epoch']
-
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr,
-                      momentum=0.9, weight_decay=5e-4)
-
-
-# Training
-def train(epoch):
+def train(model, epoch, trainloader, device, optimizer, criterion):
     print('\nEpoch: %d' % epoch)
-    net.train()
+    model.train()
     train_loss = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs = net(inputs)
+        outputs = model(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
-
         train_loss += loss.item()
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
+        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                     % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-
-
-def test(epoch):
-    global best_acc
-    net.eval()
+def test(model, epoch, testloader, device, criterion, args, best_acc):
+    model.eval()
     test_loss = 0
     correct = 0
     total = 0
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
+            outputs = model(inputs)
             loss = criterion(outputs, targets)
-
             test_loss += loss.item()
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
-
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                         % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-
-    # Save checkpoint.
+            if batch_idx % args.log_interval == 0:
+                wandb.log({"Test Accuracy": correct / total, "Test Loss": loss})
+            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
     acc = 100.*correct/total
     if acc > best_acc:
         print('Saving..')
         state = {
-            'net': net.state_dict(),
+            'model': model.state_dict(),
             'acc': acc,
             'epoch': epoch,
         }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
+        torch.save(state, args.save_name)
         best_acc = acc
+        torch.save(model.state_dict(), os.path.join(wandb.run.dir, 'model.pt'))
 
+def run(args):
+    if args.arch == 'VGG':
+        model = VGG('VGG16')
+    elif args.arch == 'LENET':
+        model = LeNet()
+    elif args.arch == 'RESNET':
+        model = ResNet50()
+    elif args.arch == 'DPN':
+        model = DPN92()
+    elif args.arch == 'EFFICIENTNET':
+        model = EfficientNet()
+    if args.cuda:
+        device = 'cuda'
+    else:
+        device = 'cpu'
+    model = model.to(device)
+    wandb.watch(model)
+    model = torch.nn.DataParallel(model)
+    cudnn.benchmark = True
+    best_acc = 0
+    start_epoch = 0
+    trainloader, testloader = load_cifar_10(args.batch_size, args.workers)
+    if args.load_name != None:
+        print("Loading previous model:{}".format(args.save_name))
+        checkpoint = torch.load(args.save_name)
+        best_acc = checkpoint['acc']
+        start_epoch = checkpoint['epoch']
+        model.load_state_dict(checkpoint['model'])
 
-for epoch in range(start_epoch, start_epoch+200):
-    train(epoch)
-    test(epoch)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
+    #test(model, -1, testloader, device, criterion, args, best_acc)
+    for epoch in range(start_epoch, args.epochs):
+        train(model, epoch, trainloader, device, optimizer, criterion)
+        test(model, epoch, testloader, device, criterion, args, best_acc)
+        
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Experiments in Using Game Theory For Model Pruning')
+    parser.add_argument('--log_interval', default=100)
+    parser.add_argument('--arch', default='VGG', choices=['VGG','LENET','RESNET','DPN'],help='model architectures: VGG16, LENET, RESNET, DPN92')
+    parser.add_argument('--workers', default=4, type=int, help='number of data loading workers')
+    parser.add_argument('--epochs', default=300, type=int, help='number of total epochs to run')
+    parser.add_argument('--batch_size', default=128, type=int,  help='mini-batch size (default: 128)')
+    parser.add_argument('--learning_rate', default=0.1, type=float, metavar='LR', help='initial learning rate')
+    parser.add_argument('--momentum', default=0.9, type=float, metavar='M',help='momentum')
+    parser.add_argument('--weight_decay', default=5e-4, type=float, metavar='M',help='Weight Decay')
+    parser.add_argument('--train', default=True, help='Train network from scratch')
+    parser.add_argument('--eval', default=True, help='Evaluate network')
+    parser.add_argument('--prune', default=True, help='Prune Network')
+    parser.add_argument('--prune_method', default='GMP')
+    parser.add_argument('--load_name', default=None, metavar='PATH',help='path to resume training from')
+    parser.add_argument('--cuda', default=True, help='Use CPU or CUDA GPU' )
+    parser.add_argument('--save_name', help='The path used to save the trained models',default='model', type=str)
+    run(parser.parse_args())

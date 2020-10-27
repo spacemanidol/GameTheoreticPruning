@@ -1,3 +1,5 @@
+model
+wandb
 __pycache__/
 checkpoint/
 data/
