@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\title{Project Proposal: Adversarial Approaches to Neural Network Model Pruning}
+\author{Daniel Campos}
+\date{October 12th, 2020}
+\usepackage{natbib}
+\usepackage{graphicx}
+\begin{document}
+\maketitle
+\begin{abstract}
+    fasdfas
+\end{abstract}
+\section{Introduction}
+Emerging applications in the domains of image and sound processing, computer vision, machine learning, and data mining are significantly increasing
+the processing demands on compute infrastructure as the adoption of smart
+technologies like intelligent virtual assistants  and wearable devices
+[20, 35] rises. These emerging applications rely heavily on regularly-structured
+computations on inputs that include images, video, and sound, and have loose
+constraints on the quality of output. The need for significant improvements in
+processing throughput for these classes of applications along with loose quality constraints make them ideal candidates for approximate computing, where
+small amounts of output accuracy can be traded for large improvements in performance or energy
+Neural networks(NN) have shown to provide models which can excel at tasks
+like image understanding, audio processing, and natural language understanding. As tasks have grown more complex and grounded in real word usage networks have scaled to billions of parameters and are increasingly complex. In
+order to train and run networks these large complex specialized hardware like
+GPUs, FPGAs, and ASICs have become essential. In order to use these NNs in
+a more efficient way and on smaller devices like phones researchers have explored
+approximate and probabilistic ways to make neural networks more compute efficient. Methods have explored the use of low precision weights [7] which avoid
+using traditional float-32s and use representations as small as 1 bit to speed
+up neural network computation. Researchers have also explored model distillation [6] in which a larger network(referred to as a teacher) is used to distill
+the trained information into a much smaller network(referred to as a student
+model). More recently researchers have explored pruning weights within NN
+[1] to make the sparse networks which can be run on more devices and take
+advantage of decades of CPU optimizations for sparse computation.
+Like many part of computer science research in NN and Deep Learning(DL) has
+built on common themes in game theory to improve and scale systems. Methods building of N-player minmax games have spawned techniques commonly
+referred to as Generative Adversarial Networks (GAN) [3] in which two systems
+1
+are trained in parallel in an adversarial fashion. The intersection of approximate computing and Game theory there has been work that explores how to use
+game theory to improve model distillation, pruning, and compression. Methods
+like KDGAN \cite{Wang2018KDGANKD} explores formulation of distillation as a 3 player game which
+improves model performance, train time, and training efficient. Many more
+methods \cite{Guo2018SparseDW} \cite{Dhillon2018StochasticAP}, \cite{Sehwag2020OnPA}, \cite{Xie2020BlindAP}, explore the use of Adversarial methods in model
+pruning with a goal of making NN more robust to adversarial inputs. To the best
+of our knowledge no methods have explored the usage of adversarial agents to
+prune networks with a goal of sparsity.We believe that the use of game theoretic
+approaches could provide a new efficient method of selecting which connections
+in NN are most useful to task.
+\section{Related Works}
+\section{Experiment}
+In our research we seek to implement various game theoretic approaches to
+model pruning. Since we are not focusing on producing novel architectures we
+will focus on well studied datasets and model architectures. Our goal is to formulate pruning around an optimization of minimum non zero parameters. To
+explore the efficacy of our approaches we will use MNSIT \cite{lecun-mnisthandwrittendigit-2010} and CIFAR-10 \cite{CIFAR-10}
+, and ImageNet \cite{Russakovsky2015ImageNetLS} datasets which are standard benchmarks for both the
+approximate computing community and the computer vision community. For
+models we will use some of the most popular computer vision models including
+ResNet \cite{He2016DeepRL}, and VGG \cite{Simonyan2015VeryDC}. We will evaluate how well our methods work by studying pruning approaches with regards to dataset accuracy(F1@1), pruning time(FLOPS, run time, epochs), and sparsity(Number of non-zero weights, average non zero weights out of each neuron, etc).
+\section{Results}
+\section{Conclusion and Future Work}
+\end{document}
