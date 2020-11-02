@@ -20,11 +20,10 @@ wandb.init(project="game-theorectic-pruning")
 
 #models
 import efficientnet
-import resnet
+from resnet import ResNet50
 from vgg import VGG
-import lenet
-import dpn
-
+from lenet import LeNet
+from dpn import DPN
 _, term_width = os.popen('stty size', 'r').read().split()
 term_width = int(term_width)
 
@@ -208,7 +207,7 @@ def test(model, epoch, testloader, device, criterion, args, best_acc):
         }
         torch.save(state, args.save_name)
         best_acc = acc
-        torch.save(model.state_dict(), os.path.join(wandb.run.dir, 'model.pt'))
+        torch.save(model.state_dict(), os.path.join(wandb.run.dir, args.save_name))
 
 def run(args):
     if args.arch == 'VGG':
@@ -241,15 +240,16 @@ def run(args):
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
-    #test(model, -1, testloader, device, criterion, args, best_acc)
     for epoch in range(start_epoch, args.epochs):
         train(model, epoch, trainloader, device, optimizer, criterion)
         test(model, epoch, testloader, device, criterion, args, best_acc)
         
+        
+        
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Experiments in Using Game Theory For Model Pruning')
     parser.add_argument('--log_interval', default=100)
-    parser.add_argument('--arch', default='VGG', choices=['VGG','LENET','RESNET','DPN'],help='model architectures: VGG16, LENET, RESNET, DPN92')
+    parser.add_argument('--arch', default='RESNET', choices=['VGG','LENET','RESNET','DPN'],help='model architectures: VGG16, LENET, RESNET, DPN92')
     parser.add_argument('--workers', default=4, type=int, help='number of data loading workers')
     parser.add_argument('--epochs', default=300, type=int, help='number of total epochs to run')
     parser.add_argument('--batch_size', default=128, type=int,  help='mini-batch size (default: 128)')
