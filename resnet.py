@@ -1,15 +1,6 @@
-'''ResNet in PyTorch.
-
-For Pre-activation ResNet, see 'preact_resnet.py'.
-
-Reference:
-[1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
-    Deep Residual Learning for Image Recognition. arXiv:1512.03385
-'''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -41,7 +32,6 @@ class BasicBlock(nn.Module):
 
 class Bottleneck(nn.Module):
     expansion = 4
-
     def __init__(self, in_planes, planes, stride=1):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
@@ -71,7 +61,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
+    def __init__(self, block, num_blocks, num_classes):
         super(ResNet, self).__init__()
         self.in_planes = 64
 
@@ -104,29 +94,17 @@ class ResNet(nn.Module):
         return out
 
 
-def ResNet18():
-    return ResNet(BasicBlock, [2, 2, 2, 2])
+def ResNet18(num_classes=10):
+    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes)
 
+def ResNet34(num_classes=10):
+    return ResNet(BasicBlock, [3, 4, 6, 3], num_classes)
 
-def ResNet34():
-    return ResNet(BasicBlock, [3, 4, 6, 3])
+def ResNet50(num_classes=10):
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes)
 
+def ResNet101(num_classes=10):
+    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes)
 
-def ResNet50():
-    return ResNet(Bottleneck, [3, 4, 6, 3])
-
-
-def ResNet101():
-    return ResNet(Bottleneck, [3, 4, 23, 3])
-
-
-def ResNet152():
-    return ResNet(Bottleneck, [3, 8, 36, 3])
-
-
-def test():
-    net = ResNet18()
-    y = net(torch.randn(1, 3, 32, 32))
-    print(y.size())
-
-# test()
+def ResNet152(num_classes=10):
+    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes)
