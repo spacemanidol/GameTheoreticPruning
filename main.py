@@ -19,7 +19,7 @@ from collections import OrderedDict
 
 #Logging Of Model
 import wandb
-wandb.init(project="game-theorectic-pruning")
+#wandb.init(project="game-theorectic-pruning")
 
 #models
 from resnet import ResNet50
@@ -168,7 +168,7 @@ def test(model, epoch, testloader, device, criterion, args, best_acc, prune_flag
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
             if batch_idx % args.log_interval == 0:
-                wandb.log({"Test Accuracy": correct / total, "Test Loss": loss})
+                pass #wandb.log({"Test Accuracy": correct / total, "Test Loss": loss})
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
     acc = 100.*correct/total
     if acc > best_acc and prune_flag == False: 
@@ -180,7 +180,7 @@ def test(model, epoch, testloader, device, criterion, args, best_acc, prune_flag
         }
         torch.save(state, args.save_name)
         best_acc = acc
-        torch.save(model.state_dict(), os.path.join(wandb.run.dir, args.save_name))
+        #torch.save(model.state_dict(), os.path.join(wandb.run.dir, args.save_name))
     if prune_flag == True:
         return acc
     return best_acc
@@ -195,11 +195,11 @@ def L1RandomPrune(module, prune_percentage):
 
 def PositiveMagnitudePrune(module,prune_percentage):
     prune_percentage = max(1/module.weight.nelement(),prune_percentage)
-    PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage)
+    PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage)
 
 def NegativeMagnitudePrune(module,prune_percentage):
     prune_percentage = max(1/module.weight.nelement(),prune_percentage)
-    NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage)
+    NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage)
 
 def RandomPrune(module, prune_percentage):
     prune_percentage = max(1/module.weight.nelement(),prune_percentage)
@@ -209,56 +209,56 @@ def L1Prune(module, prune_percentage):
     prune_percentage = max(1/module.weight.nelement(),prune_percentage)
     prune.l1_unstructured(module, name='weight', amount = prune_percentage)
 
-def MagnitudeL1(module,prune_percentage):
+def MagnitudeL1Prune(module,prune_percentage):
     if random.randint(0, 1) == 0:
         prune.l1_unstructured(module, name='weight', amount = prune_percentage/2)
         if random.randint(0, 1) == 0:
-            PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
-            NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
+            PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
+            NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
         else:
-            NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
-            PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
+            NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
+            PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
     else:
         if random.randint(0, 1) == 0:
-            NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
-            PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
+            NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
+            PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
             prune.l1_unstructured(module, name='weight', amount = prune_percentage/2)
         else:
-            PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
-            NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
+            PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
+            NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
             prune.l1_unstructured(module, name='weight', amount = prune_percentage/2)
 
-def MagnitudeRandom(module,prune_percentage):
+def MagnitudeRandomPrune(module,prune_percentage):
     if random.randint(0, 1) == 0:
         prune.random_unstructured(module, name='weight', amount = prune_percentage/3)
         if random.randint(0, 1) == 0:
-            PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
-            NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
+            PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
+            NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
         else:
-            NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
-            PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
+            NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
+            PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
     else:
         if random.randint(0, 1) == 0:
-            NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
-            PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
+            NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
+            PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
             prune.random_unstructured(module, name='weight', amount = prune_percentage/3)
         else:
-            PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
-            NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/3)
+            PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
+            NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/3)
             prune.random_unstructured(module, name='weight', amount = prune_percentage/3) 
 
 def MagnitudePrune(module,prune_percentage):
     if random.randint(0, 1) == 0:
-        PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/2)
-        NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/2)
+        PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/2)
+        NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/2)
     else:
-        NegativeMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/2)
-        PositiveMagnitudePrune.apply(module, name='weight', percentage=prune_percentage/2)
+        NegativeMagnitude.apply(module, name='weight', percentage=prune_percentage/2)
+        PositiveMagnitude.apply(module, name='weight', percentage=prune_percentage/2)
 
-class PositiveMagnitudePrune(prune.BasePruningMethod):
+class PositiveMagnitude(prune.BasePruningMethod):
     PRUNING_TYPE = 'unstructured'
     def __init__(self, percentage):
-        super(PositiveMagnitudePrune, self).__init__()
+        super(PositiveMagnitude, self).__init__()
         self.percentage = percentage
     def compute_mask(self, t, default_mask):
         mask = default_mask.clone()
@@ -270,14 +270,14 @@ class PositiveMagnitudePrune(prune.BasePruningMethod):
             if m_sort[i].item() > 0 and m_sort[i-1].item() <= 0:
                 target_idx = i
                 break
-        for i in range(max(1,self.percentage*total_weights)):
+        for i in range(max(1,int(self.percentage*total_weights))):
             mask.view(-1)[idx_sort[target_idx + i]] = 0
         return mask
 
-class NegativeMagnitudePrune(prune.BasePruningMethod):
+class NegativeMagnitude(prune.BasePruningMethod):
     PRUNING_TYPE = 'unstructured'
     def __init__(self, percentage):
-        super(NegativeMagnitudePrune, self).__init__()
+        super(NegativeMagnitude, self).__init__()
         self.percentage = percentage
     def compute_mask(self, t, default_mask):
         mask = default_mask.clone()
@@ -289,7 +289,7 @@ class NegativeMagnitudePrune(prune.BasePruningMethod):
             if m_sort[i].item() < 0 and m_sort[i-1].item() >= 0:
                 target_idx = i
                 break
-        for i in range(max(1,self.percentage*total_weights)):
+        for i in range(max(1,int(self.percentage*total_weights))):
             mask.view(-1)[idx_sort[target_idx - i]] = 0
         return mask
 
@@ -324,7 +324,7 @@ def main(args):
         device = 'cpu'
     
     model = model.to(device)
-    wandb.watch(model)  
+    #wandb.watch(model)  
     
     best_acc = 0
     start_epoch = 0
@@ -383,10 +383,12 @@ def main(args):
         args.save_name = args.save_name + args.prune_method
         acc = test(model, start_epoch, testloader, device, criterion, args, best_acc, prune_flag=True)
         accuracies.append((0, acc))
+        weight_sparcity = 0
         for i in range(1, prune_epochs+1):
             target = float(args.prune_speed * i)
             sparcities = [[],[]]
-            for module in model.module.children():
+            for module in model.module.features: # for VGG
+            #for module in model.module.children():
                     pruneable = False
                     if isinstance(module, nn.Conv2d):
                         for p in module.parameters():
@@ -398,7 +400,8 @@ def main(args):
             weight_sparcity = np.average(sparcities[0]) 
             while weight_sparcity <= target:
                 sparcities[1] = []
-                for module in model.module.children():
+                for module in model.module.features: # for VGG
+                #for module in model.module.children():
                     pruneable = False
                     if isinstance(module, nn.Conv2d):
                         for p in module.parameters():
@@ -423,23 +426,33 @@ def main(args):
                             MagnitudeRandomPrune(module, prune_percentage)
                         elif args.prune_method == 'MAGNITUDE+L1':
                             MagnitudeL1Prune(module, prune_percentage)
-                        sparcities[1].append(get_module_weight_sparcity(module))   
+                        sparcities[1].append(get_module_weight_sparcity(module))
                 weight_sparcity = np.average(sparcities[1])
-                print(weight_sparcity)
+            sparcities[1] = []   
+            for module in model.module.features: # for VGG
+            #for module in model.module.children():
+                pruneable = False
+                if isinstance(module, nn.Conv2d):
+                    for p in module.parameters():
+                        if p.requires_grad:
+                            pruneable = True
+                            break
+                if pruneable:
+                    sparcities[1].append(get_module_weight_sparcity(module))  
             print("Weight Sparcity Before:{}.\nWeight Sparcity After{}.\n".format(np.average(sparcities[0]),np.average(sparcities[1])))
             train(model, i, trainloader, device, optimizer, criterion)
             accuracies.append((weight_sparcity, test(model, i, testloader, device, criterion, args, best_acc)))
         
 
-            print("Done Prunning. Now Stabilizing for 10 epochs")
-            args.prune_learning_rate  *= .1
-            args.save_name = args.save_name + "_stabilized"
-            optimizer = optim.SGD(model.parameters(), lr=args.prune_learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
-            for epoch in range(10):
-                train(model, epoch, trainloader, device, optimizer, criterion)
-                acc = test(model, epoch, testloader, device, criterion, args, best_acc)
-                accuracies.append((weight_sparcity, acc))
-            print("Model Accuracy with regards to spacity:{}".format(accuracies))
+        print("Done Prunning. Now Stabilizing for 10 epochs")
+        args.prune_learning_rate  *= .1
+        args.save_name = args.save_name + "_stabilized"
+        optimizer = optim.SGD(model.parameters(), lr=args.prune_learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
+        for epoch in range(10):
+            #train(model, epoch, trainloader, device, optimizer, criterion)
+            acc = test(model, epoch, testloader, device, criterion, args, best_acc)
+            accuracies.append((weight_sparcity, acc))
+        print("Model Accuracy with regards to spacity:{}".format(accuracies))
 
     
         
@@ -458,7 +471,7 @@ if __name__ == '__main__':
     parser.add_argument('--arch', default='RESNET50', choices=['VGG16','RESNET50','DPN92'],help='model architectures: VGG16, LENET, RESNET, DPN92')
     parser.add_argument('--workers', default=4, type=int, help='number of data loading workers')
     parser.add_argument('--epochs', default=500, type=int, help='number of total epochs to run')
-    parser.add_argument('--batch_size', default=128, type=int,  help='mini-batch size (default: 128)')
+    parser.add_argument('--batch_size', default=64, type=int,  help='mini-batch size (default: 128)')
     parser.add_argument('--learning_rate', default=0.1, type=float, metavar='LR', help='initial learning rate')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',help='momentum')
     parser.add_argument('--weight_decay', default=5e-4, type=float, metavar='M',help='Weight Decay')

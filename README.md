@@ -9,13 +9,27 @@ pip install torch torchvision
 
 ### Status
 1. Baselines
-    VGG16 cifar10 (done) 86.85 # at 1
-    VGG16 cifar100 (done) 58.43 # at 1 accuracy
-    RESNET50 cifar10 (done) 86.89 # at 1
-    RESNET50 cifar100 (in progress)
-    DPN92 cifar10 
-    DPN92 cifar100  (in progress)
+    VGG16 cifar10 (done) 86.85 @1
+    VGG16 cifar100 (done) 58.43 @1
+    RESNET50 cifar10 (done) 86.89 @1
+    RESNET50 cifar100 (done) 62.74 @1
+    DPN92 cifar10 (done) 88.61 @1
+    DPN92 cifar100  (done) 66.13 @1
+
 2. Prune each baseline with 8 prunings
+    DPN92 Cifar 10 
+
+
+    python main.py --arch DPN92 --dataset cifar10 --load_name models/DPN92cifar10 --prune --prune_method RANDOM > results/DPN92cifar100PruneRANDOM11272020.txt
+python main.py --arch DPN92 --dataset cifar10 --load_name models/DPN92cifar10 --prune --prune_method L1 > results/DPN92cifar100PruneL111272020.txt
+python main.py --arch DPN92 --dataset cifar10 --load_name models/DPN92cifar10 --prune --prune_method POSITIVE > results/DPN92cifar100PrunePositive11272020.txt
+python main.py --arch DPN92 --dataset cifar10 --load_name models/DPN92cifar10 --prune --prune_method NEGATIVE > DPN92cifar100PruneNegative11272020.txt
+python main.py --arch DPN92 --dataset cifar10 --load_name models/DPN92cifar10 --prune --prune_method MAGNITUDE > DPN92cifar100PruneMAGNITUDE11272020.txt
+python main.py --arch DPN92 --dataset cifar10 --load_name models/DPN92cifar10 --prune --prune_method MAGNITUDE+L1 > results/DPN92cifar100PruneMAGNITUDE+L111272020.txt
+python main.py --arch DPN92 --dataset cifar10 --load_name models/DPN92cifar10 --prune --prune_method MAGNITUDE+RANDOM > results/DPN92cifar100PruneMAGNITUDE+RANDOM11272020.txt
+python main.py --arch DPN92 --dataset cifar10 --load_name models/DPN92cifar10 --prune --prune_method 1+RANDOM > results/DPN92cifar100Prune1+RANDOM11272020.txt
+
+
 
 
 
