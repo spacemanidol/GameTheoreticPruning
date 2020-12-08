@@ -1,17 +1,120 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
-\title{Project Proposal: Adversarial Approaches to Neural Network Model Pruning}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+\title{Neural Network Pruning as a N Player NIM Game}
 \author{Daniel Campos}
-\date{October 12th, 2020}
 \usepackage{natbib}
 \usepackage{graphicx}
 \begin{document}
 \maketitle
 \begin{abstract}
-    fasdfas
+Unstructured pruning has become one of the most popular methods for Neural Network model pruning since it provides an intuitive method of extracting a sub network from the original Neural Network which matches the pruning goals. Pruning approaches have been used to reduce model size, increase adversarial robustness, increase stability and generizability, and increase model inference speed but each of these goals works independently. By framing Network Pruning as a $N$ player NIM game we provide a framework which can be used to combine pruning strategies depending on needs. In our work, each pruning method takes the role of a NIM game player where they remove weights from a network in an iterative fashion. We find that 2 player methods combining $L1$ and Random pruning outperform existing method across datasets and models. We believe this formulation of network pruning provides a comprehensive framework which can be used to prune networks for multiple goals. 
 \end{abstract}
 \section{Introduction}
-Emerging applications in the domains of image and sound processing, computer vision, machine learning, and data mining are significantly increasing
+Neural Networks have become popular choices for complex computation tasks like image recognition \cite{Howard2017MobileNetsEC}, image generation \cite{Goodfellow2014GenerativeAN}, speech processing \cite{Zhao2017RecurrentCN}, and question answering \cite{Seo2017BidirectionalAF}. These networks have grown to hundred billions of parameters \cite{Brown2020LanguageMA} which require specialized hardware like clusters of GPUs and FPGAs in order to infer on unseen data. Recent work has shown that larger networks can learn quicker \cite{Li2020TrainLT}, are more accurate and are more sample efficient \cite{Kaplan2020ScalingLF}. Seeking to allow the improvements that large models have brought to be used on smaller devices and in a more energy efficient way researchers have produced many methods which produce smaller networks that approximate, match, or exceed the original network performance. \\
+Model distillation, quantization, and pruning have emerged as successful methods to produce smaller networks from the original over-parametized network. In model distillation  \cite{Ba2014DoDN} the original network is used to train a smaller network to mimic the behavior of the large network. In model quantization \cite{Han2016DeepCC} models are made smaller by  reducing the numbers of bits that represent each weight. Model Pruning \cite{LeCun1989OptimalBD} has focused on finding sub-networks in the original network by structured and unstructured pruning. In structured pruning, successful sub-networks are found by removing neurons  \cite{Wang2019StructuredPF} or larger network specific structures like attention heads \cite{Voita2019AnalyzingMS}. In unstructured pruning the successful sub-networks are found by setting individual weights to zero \cite{Kwon2019StructuredCB}. \\
+Using network pruning, The Lottery Ticket Hypothesis \cite{Frankle2019TheLT} proved the concept that in large neural networks there exists a sub network which can match the accuracy of the full network despite its smaller size. Building on the notion that there are many sub networks in an overparamertized network we formulate network pruning as a combinatorial problem. Given an initial structure $S$ and a target network size $\epsilon$ the goal is to find the sub network $s_m$ of size $\epsilon$ which maximizes the optimization metric. Sub networks can have many different optimization goals such as: accuracy, size, adversarial robustness, computation speed, explainability, etc. Given that networks commonly have millions of parameters and the network can continually be updated by retraining even a greedy strategy for optimal model selection would require a millions of combinations. Instead, using network pruning we can can produce sub network $s_a$ with minimal compute and using a targeted pruning strategy we only remove neurons that minimize our optimization goal. \\
+Believing that the future of network pruning is likely to focus on multi metric optimization we formulate network pruning as a $N$ player game of NIM. In a game a NIM \cite{BoutonNimA} \cite{Dass2006SecretsBT} players remove items from a variety of bins in alternating turns. Using this strategy we are able to combine different pruning strategies to produce networks that maximize sparcity and performance and outperform traditional iterative pruning mechanisms. 
+\section{Related Work}
+\subsection{Game Theory}
+\subsection{Network Pruning}
+
+We provide an answer to this question by illuminating a regularization mechanism in pruning separate
+from its effect on parameter counts. Specifically, we show that simple magnitude pruning [17, 18]
+produces an effect similar to noise-injection regularization [31–37]. We explore this view of pruning \cite{Bartoldson2019TheGT}
+as noise injection through a proxy for the level of representation “noise” or corruption pruning injects:
+the drop in accuracy immediately after a pruning event, which we call the pruning instability (Figure
+1 illustrates the computation of instability). While stability (stability = 1 − instability) is often the
+goal of neural network pruning because it preserves the function computed [15], stable pruning could
+be suboptimal to the extent that pruning regularizes by noising representations during learning.
+Supporting the framing of pruning as noise-injection, we find that pruning stability is negatively correlated with the final level of generalization attained by the pruned model. Further, this generalizationstability tradeoff appears when making changes to any of several pruning algorithm hyperparameters.
+For example, pruning algorithms typically prune the smallest magnitude weights to minimize their
+impact on network activation patterns (i.e., maximize stability). However, we observe that while
+pruning the largest magnitude weights does indeed cause greater harm to stability, it also increases
+generalization performance. In addition to suggesting a way to understand the repercussions of
+pruning algorithm design and hyperparameter choices, then, these results reinforce the idea that
+pruning’s positive effect on DNN generalization is more about stability than final parameter count.
+
+Since
+not all weights matter equally to a DNN’s computations, we measure the amount/salience of the
+“noise” injected by pruning via the drop in accuracy immediately following pruning
+
+# Could prune similair function(aka similair cascades)
+-entropy pruning(high weights into the neuron)
+Class Specific Importance
+Proposes that while assessing the performance of
+a pruning method, we should consider factors such
+as amount of damage (drop in performance before
+fine-tuning), amount of recovery (performance after
+fine-tuning), speed of recovery and quantum of data
+required for recovery
+
+l1-Norm [27] : The authors of [27] suggest that the
+l1-norm (kFk1) of a filter can also be used as an
+indicator of the importance of the filter. The argument is that if the l1-norm of a filter is small then
+on average the weights in the filter will be small
+and hence produce very small activations. These
+small activations will not influence the output of the
+network and hence the corresponding filters can be
+pruned away. One important benefit of this method
+is that apart from computing the l1-norm, it does
+not need any extra computation during pruning and
+fine-tuning.
+
+Explore weight drop and back \cite{Jia2020StochasticMP} which adds back weights Once the pruning process falls into a local minimum (the
+L0 optimization domain is shrunken, N (Tj+1) ⊂ N (Tj
+)
+both for Traditional Pruning and Drop away Pruning), it will
+have no chance to escape. Drop back is proposed to overcome this problem, and the main idea is randomly dropping
+back some weights from the pruned ones. Define the set
+Kj = {i| T
+j
+i = 0} that contains the indexes of pruned
+weights. After dropping away the unimportant weights by
+(4), we also drop back some pruned weights with probability pback:
+T
+j+1
+i = 1, if i ∈ B(Kj
+, pback), (5)
+which provides the model with a chance to escape from a local minimum of the L0 term. Furthermore, this action may
+also help the model to escape from a local minimum of the
+
+
+However, this information can only reflect the weights’
+importance of the current model, not the desired optimal
+model of the underlying classification or regression problem
+
+
+Network pruning in some ways is the alteration of weight distributions in a netwrok
+
+\cite{Bartoldson2019TheGT} Pruning neural network parameters is often viewed as a means to compress models, but pruning has also been motivated by the desire to prevent overfitting. 
+
+there can exist multiple different lucky sub-networks (lottery tickets) within an overparametrized network;
+2. it is possible to find a lucky sub-network through a variety of choices of pruning techniques;
+3. lottery ticket-style weight rewinding, coupled with unstructured pruning, gives rise to connectivity patterns similar to the ones obtained with structured pruning along the input dimension, thus pointing to an input feature selection type of effect. This is not the case when
+rewinding is substituted by finetuning;
+4. random structured pruning outperforms random unstructured pruning, meaning that networks are more resistant to the removal of random units/channels than to the removal of
+random individual connections;
+5. different iterative pruning techniques learn vastly different functions of their input, and similarly performing networks make different mistakes on held-out test sets, hinting towards
+the utility of ensembling in this setting;
+6. weight stability to pruning correlates with performance, and can be induced through the
+use of suitable pruning techniques, even without late resetting.
+
+Neuronal Importance Definition: In magnitude-based pruning, units/connections are removed
+based on the magnitude of synaptic weights. Usually, low magnitude parameters are removed. As a
+(rarer) alternative, one can consider removing high magnitude weights instead (Zhou et al., 2019).
+Non-magnitude-based pruning techniques, instead, can be based, among others, on activations, gradients, or custom rules for neuronal importance.
+Local vs. global: Local pruning consists of removing a fixed percentage of units/connections from
+each layer by comparing each unit/connection exclusively to the other units/connections in the layer.
+On the contrary, global pruning pools all parameters together across layers and selects a global fraction of them to prune. The latter is particularly beneficial in the presence of layers with unequal
+parameter distribution, by redistributing the pruning load more equitably. A middle-ground approach is to pool together only parameters belonging to layers of the same kind, to avoid mixing,
+say, convolutional and fully-connected layers.
+Unstructured vs. structured: Unstructured pruning removes individual connections, while structured pruning removes entire units or channels. Note that structured pruning along the input axis is
+conceptually similar to input feature importance selection. Similarly, structured pruning along the
+output axis is analogous to output suppression.
+merging applications in the domains of image and sound processing, computer vision, machine learning, and data mining are significantly increasing
 the processing demands on compute infrastructure as the adoption of smart
 technologies like intelligent virtual assistants  and wearable devices
 [20, 35] rises. These emerging applications rely heavily on regularly-structured
@@ -45,16 +148,260 @@ of our knowledge no methods have explored the usage of adversarial agents to
 prune networks with a goal of sparsity.We believe that the use of game theoretic
 approaches could provide a new efficient method of selecting which connections
 in NN are most useful to task.
-\section{Related Works}
+\section{Network Punning is an N player Game}
 \section{Experiment}
-In our research we seek to implement various game theoretic approaches to
-model pruning. Since we are not focusing on producing novel architectures we
-will focus on well studied datasets and model architectures. Our goal is to formulate pruning around an optimization of minimum non zero parameters. To
-explore the efficacy of our approaches we will use MNSIT \cite{lecun-mnisthandwrittendigit-2010} and CIFAR-10 \cite{CIFAR-10}
-, and ImageNet \cite{Russakovsky2015ImageNetLS} datasets which are standard benchmarks for both the
-approximate computing community and the computer vision community. For
-models we will use some of the most popular computer vision models including
-ResNet \cite{He2016DeepRL}, and VGG \cite{Simonyan2015VeryDC}. We will evaluate how well our methods work by studying pruning approaches with regards to dataset accuracy(F1@1), pruning time(FLOPS, run time, epochs), and sparsity(Number of non-zero weights, average non zero weights out of each neuron, etc).
+The structure of our experiments is straightforward: train an initial baseline method and prune this networks iteratively using each of the candidate methodologies. To evaluate the effect of our formulation we select 3 popular image recognition frameworks which vary in structure, size and recency: VGG-16 \cite{Simonyan2015VeryDC}, ResNet50 \cite{He2016DeepRL}, DPN92 \cite{Chen2017DualPN}. We train each network on the CIFAR-10 \cite{Krizhevsky2009LearningML} and CIFAR-100 \cite{CIFAR-10} dataset which are common benchmarks for evaluating image systems. The CIFAR-10 dataset consists of 60,000 32x32 color images where each image belongs to one of ten classes. The CIFAR-100 dataset is just like CIFAR-10 but it has 100 classes instead of 10 and each class includes 600 examples instead of 6,000. \\
+\subsection{Generating Baselines}
+Each of our model baselines are trained in an identical fashion. For each combination of model architecture and dataset each model is trained with a batch size of 128, an initial learning rate of 0.1 and trained for 1000 epochs. Models are trained using 2 Nvidia 2080 Ti GPUs with a  Intel Core™ i9-10900X CPU and 128GB of RAM. Training time ranges from 1 hour for VGG-16 to 1 day for DPN-92. During this training regime we evaluate the model on the validation portion of the dataset at the end of each epoch and the final candidate baseline is the checkpoint that maximised validation accuracy. Numerical details on baseline models can be found in Table \ref{tab:tab1}.
+\begin{table}[]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|l|l|l|l|l|}
+\hline
+Model Name      & Architecture & Dataset   & Parameters(Millions) & Convolutional Weights(Millions) Best Accuracy & Epoch Best Accuracy \\ \hline
+VGG16-CIFAR-10 & VGG-16       & CIFAR-10  & 14.73             & 14.71   & 86.85         & 232                 \\ \hline
+VGG16-CIFAR-100 & VGG-16       & CIFAR-100 & 14.77            & 14.71     & 58.43         & 887                 \\ \hline
+RESNET50-CIFAR10               & RESNET50     & CIFAR-10  & 23.52  & 20.68              & 86.89         & 178                 \\  \hline
+RESNET50-CIFAR100               & RESNET50     & CIFAR-100 & 23.71 & 20.68               & 62.74         & 764                 \\\hline
+DPN92-CIFAR10    & DPN-92       & CIFAR-10  & 34.24         & 29.88       & 88.61         & 90                  \\\hline
+DPN92-CIFAR10 & DPN-92       & CIFAR-100 & 34.47            & 29.88    & 66.13         & 115  \\  \hline             
+\end{tabular}%
+}
+\caption{Baseline models accuracy, train time and parameter size.}
+\label{tab:tab1}
+\end{table}
+\subsection{Pruning}
+Our pruning experiments are focused on Iterative Pruning as it has become one of the most popular methods. In these experiments we only prune the weights of convolutions layers and we prune each layer independently. While other research has shown that layers in a network respond differently to levels of sparcity but our work treats each layer independently for ease of experimentation. By focusing only on pruning convolutional layers we are not exploring every possible sub network but as shown in Table \ref{tab:tab1}, convolutional weights make up the majority of each network. The process is formalized in Algorithm \ref{algo:iterprune} where $NN$ is a neural network, $lambda_i$ is the $i$th prunable layer in a $NN$, $\pi$ represents what percentage of weights need to be trimmed at each time step and $M$ represents a sorting function which maximizes the pruning optimization metric, $P$ represents the players playing our NIM game where each player $p_i$ has a strategy $s_i$ which is based on a $m_i$, $s_j$ represents sparcity at epoch j and $s_{target}$ represents the target network sparcity. \\ \\
+In our experiments we set $s_{target} = 0.95$, $\pi=0.05$ and we evaluate model performance after each epoch. Our iterative pruning has three steps: stabilization, pruning, and fine tuning. In stabilization the network is trained with a learning rate of $0.1$ for 2 epochs. In network pruning we gradually remove $\pi\%$ of  weights and retrain the network with one pass the entire training data with a learning rate of 0.01. This stage lasts 19 epochs as $s_j = s_{j-1} + \pi$ takes 19 steps to reach $s_{target}$. In fine tuning we set the learning rate to 0.001 and train the network for 10 epochs on the full dataset to ensure the network has reached optimal performance and is stable. \\
+In the network pruning step, we prune each layer independently and implement it as a NIM game as shown in Algorithm \ref{algo:nim}. In this NIM game there are some set of players $N$ which each has a strategy for network pruning $s_i$. For each round, player order is randomly selected and each players removes a single weight from the layer. A NIM game is played for each $\lambda_i \in NN$ and if the network sparcity is under the $s_{current sparcity}$ then another round of NIM is played on each layer that is still under the target. Since target sparcity is a global parameter some layer sparcity will have lower and higher sparcity than the target. If a layer is over pruned in one epoch it will not be pruned until its sparcity is lower than the target.  Each player $n_i \in N$ is defined by what pruning strategy is used and while our experiments focus on 2 and 3 player games $N$ could be much bigger. \\
+\begin{algorithm}[H]
+\label{algo:prune}
+\SetAlgoLined
+\KwResult{Pruned Neural Network Layer}
+\SetKwFunction{FMain}{Prune}
+  \SetKwProg{Fn}{Function}{:}{}
+  \Fn{\FMain{$\lambda_i$, $M$}}{
+        idx-sort = Sort weights $w_j \in \lambda_i$ using by $M$ \CommentSty{//produce a sorted lookup index of weights in layer based on a sorting function $M$}\;
+        j = 0 \; 
+        \While{$\lambda_i$[idx-sort[j]] == 0} {
+         j = j + 1  \CommentSty{//Find first non pruned weight}
+        }
+        $\lambda_i$[idx-sort[j]] = 0 \CommentSty{Prune weight by setting to 0} \; 
+        \KwRet $\lambda_i$
+}
+\caption{Prune Function sorts the weights in layer given using the optimization goal and sets the least important non zero weigth to 0 }
+\end{algorithm}
+
+\begin{algorithm}[H]
+\label{algo:nim}
+\SetAlgoLined
+\KwResult{pruned layer of a NN}
+\SetKwFunction{FPrune}{Prune}
+\SetKwFunction{FMain}{NimGame}
+\SetKwFunction{Fs}{getStrategy}
+\S
+  \SetKwProg{Fn}{Function}{:}{}
+  \Fn{\FMain{$\lambda_i, P$}}{
+  \For{p $\in$ P}{$\lambda_i$=
+  \FPrune{$\lambda_i$,\Fs{$p$}}\; 
+  }
+}
+\caption{Iterative Network Pruning}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\label{algo:iterprune}
+\SetAlgoLined
+\KwResult{Sparse Neural Network}
+\SetKwFunction{FPrune}{Prune}
+\SetKwFunction{FMain}{IterativePrune}
+\SetKwFunction{FTrain}{Train}
+\SetKwFunction{FEval}{Evaluate}
+\SetKwFunction{FNim}{NimGame}
+\SetKwFunction{Fc}{isConvLayer}
+\SetKwFunction{Fs}{GetNetworkSparcity}
+\SetKwFunction{Fss}{GetLayerSparcity}
+  \SetKwProg{Fn}{Function}{:}{}
+  \Fn{\FMain{$NN, \pi, s_{target}, P$}}{
+  pruningepochs = $\frac{s_{target}}{\pi}$\;
+  \FEval($NN$)\;
+  \For{i in range(0,2)}{
+      \FTrain{$NN$}\;
+      \FEval($NN$)\;
+    }
+    $s_{current target} = 0$\;
+    \For{i in range(0,pruningepochs)}{
+        $s_{current target} =  s_{current target} + \pi$ \;
+        $s_{current} =$ \Fs{$NN$}\;
+        \While{$s_{current} < s_{current target}$}{
+            \For{$\lambda \in NN$}{
+                \If{\Fc{$\lambda$}} {
+                    \If{\Fss{$\lambda $}   $ < s_{current target}$} {
+                        $\lambda = $ \FNim{$\lambda , P$}\;
+                    }
+                }
+                $s_{current} =$ \Fs{$NN$}\;
+        }
+        }
+        \FEval($NN$)\;
+        \FTrain{$NN$}\;
+        \FEval($NN$)\;
+    }
+    \For{i in range(0,10)}{
+      \FTrain{$NN$}\;
+      \FEval($NN$)\;
+    }
+}
+\caption{Iterative Network Pruning}
+\end{algorithm}
+\subsection{Pruning Methods}
+Using the methodology previously described we explore the effect of. To explore how NIM can be used in Network pruning we formulate 8 games with a mixture and strategies. 
+
+\subsection{L1}
+\subsubsection{Random}
+\subsection{Positive Magnitude}
+\subsection{Negative Magnitude}
+\subsubsection{Magnitude}
+\subsection{L1 + Random}
+\subsection{L1 + Magnitude}
+\subsection{Random+ Magnitude}
+if args.prune_method == 'L1': 
+                            L1Prune(module, prune_percentage)
+                        elif args.prune_method == 'RANDOM':
+                            RandomPrune(module, prune_percentage)
+                        elif args.prune_method == 'L1+RANDOM':
+                            L1RandomPrune(module, prune_percentage)
+                        elif args.prune_method == 'POSITIVE':
+                            PositiveMagnitudePrune(module, prune_percentage)
+                        elif args.prune_method == 'NEGATIVE':
+                            NegativeMagnitudePrune(module, prune_percentage)
+                        elif args.prune_method == 'MAGNITUDE':
+                            MagnitudePrune(module, prune_percentage)
+                        elif args.prune_method == 'MAGNITUDE+RANDOM':
+                            MagnitudeRandomPrune(module, prune_percentage)
+                        elif args.prune_method == 'MAGNITUDE+L1':
+                            MagnitudeL1Prune(module, prune_percentage)
 \section{Results}
-\section{Conclusion and Future Work}
+
+
+    
+\section{Future Work}
+-Expand to NLP
+-Move to Global unstructured instead of layer by layer
+-Add in methods that target FLOP aware pruning, Stability aware, Impact of neuron, Class aware pruning. 
+We achieve this by formulating pruning as an empirical risk minimization (ERM) problem and
+integrating it with a robust training objective. Our formulation is generalizable where we show its
+integration with multiple empirical and verifiable robust training objectives, i
+On Lenet and Conv-2/4/6, we prune each layer separately at the same rate. : For these deeper networks, some layers have
+far more parameters than others. For example, the first two convolutional layers of VGG-19 have
+1728 and 36864 parameters, while the last has 2.35 million. When all layers are pruned at the same
+rate, these smaller layers become bottlenecks, preventing us from identifying the smallest possible
+winning tickets. Global pruning makes it possible to avoid this pitfall.
+
+During training compression
+Distillation (Ba & Caruana, 2014; Hinton et al., 2015) trains small networks to mimic
+the behavior of large networks; small networks are easier to train in this paradigm. Recent pruning
+work compresses large models to run with limited resources (e.g., on mobile devices). Although
+pruning is central to our experiments, we study why training needs the overparameterized networks
+that make pruning possible. LeCun et al. (1990) and Hassibi & Stork (1993) first explored pruning
+based on second derivatives. More recently, Han et al. (2015) showed per-weight magnitude-based
+pruning substantially reduces the size of image-recognition networks. Guo et al. (2016) restore
+pruned connections as they become relevant again. Han et al. (2017) and Jin et al. (2016) restore
+pruned connections to increase network capacity after small weights have been pruned and surviving
+weights fine-tuned. Other proposed pruning heuristics include pruning based on activations (Hu et al.,
+2016), redundancy (Mariet & Sra, 2016; Srinivas & Babu, 2015a), per-layer second derivatives (Dong
+et al., 2017), and energy/computation efficiency (Yang et al., 2017) (e.g., pruning convolutional
+filters (Li et al., 2016; Molchanov et al., 2016; Luo et al., 2017) or channels (He et al., 2017)). Cohen
+et al. (2016) observe that convolutional filters are sensitive to initialization (“The Filter Lottery”);
+throughout training, they randomly reinitialize unimportant filte
+
+
+Accuracy and efficiency of the initial model
+• Data augmentation and preprocessing
+• Random variations in initialization, training, and finetuning. This includes choice of optimizer, hyperparameters, and learning rate schedule.
+• Pruning and fine-tuning schedule
+• Deep learning library. Different libraries are known to
+
+Identify the exact sets of architectures, datasets, and
+metrics used, ideally in a structured way that is not scattered throughout the results section.
+• Use at least three (dataset, architecture) pairs, including
+modern, large-scale ones. MNIST and toy models do
+not count. AlexNet, CaffeNet, and Lenet-5 are no longer
+modern architectures.
+• For any given pruned model, report both compression
+ratio and theoretical speedup. Compression ratio is defined as the original size divided by the new size. Theoretical speedup is defined as the original number of
+multiply-adds divided by the new number. Note that
+there is no reason to report only one of these metrics.
+• For ImageNet and other many-class datasets, report both
+Top-1 and Top-5 accuracy. There is again no reason to
+report only one of these.
+• Whatever metrics one reports for a given pruned model,
+also report these metrics for an appropriate control (usually the original model before pruning).
+• Plot the tradeoff curve for a given dataset and architecture, alongside the curves for competing metho
+Neural Networks have been steadily growing in size and in the last few year model size has grown at a rate of \cite{} OPEN AI THING. These new larger models have allowed impressive improvements in tasks like object recognition, speech detection, and question answering but as they have grown in size the increasingly need larger and more specialized hardware like GPU and FPGAs. Along with growing model sizes there has been a research movement which seeks to make these large models smaller and more able to be used on small hardware. Researcher have explore approximation approaches like: distillation, pruning, and quantization to decrease model size without major decreases in performance. Methods like prunning have shown that the removal of weights in networks can produce networks with equal or better performance and \frac{1}{20}th the model size \cite{}. Unstructured pruning, in which individual weights in a neural network are zeroed, has shown success using regularization-based pruning \cite{Molchanov2017VariationalDS}, threshold mechanisms \cite{} Some MAgnitude pruning, and Random Pruning. Threshold mechanism that start from a dense, fully trained model, and gradually apply prunning steps, have shown to be particularly successful as models are able to recover from each prune step by training in between. Outside of the approximate computing world, researchers have shown tremendous success in the framing of computational problems using game theory \cite{Goodfellow2014GenerativeAN}. 
+In this paper we has shown particular promise as magnitude \cite{}, momentum \cite{}, and random
+
+Optimal Brain Damage 
+OG prunning paper
+
+combinatorial optimization problem: choose a subset of weights B, such that when pruning them the network cost change will be minimal.
+
+L1 norm RETHINKING THE VALUE OF NETWORK PRUNING
+Prune (currently unpruned) units in a tensor by zeroing out the ones with the lowest L1-norm.
+L1-norm based Filter Pruning (Li et al., 2017) is one of the earliest works on filter/channel pruning
+for convolutional networks. In each layer, a certain percentage of filters with smaller L1-norm will
+be pruned. Table 1 shows our results. The Pruned Model column shows the list of predefined target
+models (see (Li et al., 2017) for configuration details on each model). We observe that in each
+row, scratch-trained models achieve at least the same level of accuracy as fine-tuned models, with
+Scratch-B slightly higher than Scratch-E in most cases. On ImageNet, both Scratch-B models are
+better than the fine-tuned ones by a noticeable margin.
+
+Going back to Liu et al., they found that for all major structured pruning approaches it would be better to retrain the pruned network instead of fine-tuning the end state of the trained dense network. However, they came to a different conclusion than Frankle and Carbin: the pruned model would have equivalent performance of a dense model, even if the weights are randomly reinitialized. Resetting the weights to their initial values was as good as reinitializing them to random values.
+
+That would lead them to conclude that structured post-pruning is doing something similar to neural architecture search, finding the optimal architecture that works better for the given problem. The difference lies in that, in architecture search paradigms, you start with the minimal network possible and build from the ground up.  In structured pruning, on the other hand, you start with a large dense network and prune it after training to achieve the smallest possible network which has similar or superior performance compared to the dense network.
+
+
+How do neurons operate on sparse distributed representations? A
+mathematical theory of sparsity, neurons and active dendrites1
+
+sparse representations are naturally more robust to noise. T
+Lottery ticket
+
+That overparameterized dense networks containing several sparse sub-networks, with varying performances, and one of these sub-networks is the “winning ticket” which outperforms all others. The DL research community quickly realized they were onto something, and several approaches for finding this winning ticket have been proposed to date.
+
+Structured Prunning
+
+Structured pruning means pruning a larger part of the network, such as a channel, or a layer. Unstructured pruning, on the other hand, is what we have been discussing so far – find the less salient connections, and remove them, wherever they are. The disadvantage with the latter is that the sparse networks created by unstructured pruning don’t have obvious efficiency gains when trained in GPUs.
+alQuantization is ..
+
+Nim is a combinatorial game, where two players alternately take turns in taking objects from several heaps. The only rule is that each player must take at least one object on their turn, but they may take more than one object in a single turn, as long as they all come from the same heap.
+
+Nim is the most well-known example of an impartial game, a game where both players have the same moves all the time, and thus the only distinguishing feature is that one player goes first. It is also completely solved, in the sense that the exact strategy has been found for any starting configuration.
+
+
+
+
+
+https://en.wikipedia.org/wiki/Nim
+Unstructured pruning is a well researched approach for Neural Network compression. Using a vareit
+Extensive Form
+Games with
+Incomplete
+Information
+ON ITERATIVE NEURAL NETWORK PRUNING, REINITIALIZATION, AND THE SIMILARITY OF MASKS
+Need to do imagenet ResNet-50 and VGG16
+    coordination game extensive form game routing game theory
+Use at least three (dataset, architecture) pairs, including modern, large-scale ones. MNIST and toy models do not count. AlexNet, CaffeNet, and Lenet-5 are no longer modern architectures
+Along the same lines, it has been repeatedly shown that, at least for large amounts of pruning, many pruning methods outperform random pruning (Yu et al., 2018; Gale et al., 2019; Frankle et al., 2019; Mariet & Sra, 2015; Suau et al., 2018; He et al., 2017). Interestingly, this does not always hold for small amounts of pruning
+Similarly, pruning all layers uniformly tends to perform worse than intelligently allocating parameters to different layers
+
+g glob- ally (Lee et al., 2019b; Frankle & Carbin, 2019). Lastly, when holding the number of fine-tuning iterations constant, many methods produce pruned models that outperform re- training from scratch with the same sparsity pattern
+Retraining from scratch in this context means training a fresh, randomly-initialized model with all weights clamped to zero throughout training, except those that are nonzero in the pruned model.
+
+Figure 1 suggests several conclusions. First, it reinforces the conclusion that pruning can improve the time or space vs accuracy tradeoff of a given architecture, sometimes even increasing the accuracy. Second, it suggests that prun- ing generally does not help as much as switching to a better architecture. Finally, it suggests that pruning is more effec- tive for architectures that are less efficient to begin wit
+
+even the most common combination of dataset and architecture—VGG-16 on ImageNet
+\section{Introduction}
+\bibliographystyle{plain}
+\bibliography{references}
 \end{document}
