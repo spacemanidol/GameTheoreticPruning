@@ -25,7 +25,25 @@ import wandb
 from resnet import ResNet50
 from vgg import VGG16
 from dpn import DPN92
-
+    
+def print_sparse_model_params(model):
+    params = 0
+    #for module in model.module.features: # for VGG
+    for module in model.module.children():
+        for submodule in module.children():
+            for subsubmodule in submodule.children():
+                if isinstance(subsubmodule, nn.Conv2d):
+                    params +=  float(subsubmodule.weight.nelement())
+            """for p in module.parameters():
+                if p.requires_grad:
+                    params += float(p.data.nelement())   * (1-get_param_sparcity(p))"""
+    print('  + Number of params: %.2fM' % (params / 1e6)) 
+    exit(-1)
+    
+def get_module_weight_sparcity(module):
+    return 100. * float(torch.sum(module.weight == 0)) / float(module.weight.nelement())
+def get_param_sparcity(p):
+    return 100. * float(torch.sum(p.data == 0)) / float(p.data.nelement())  
 # Data Loaders
 def load_imagenet(target_batch_size, target_num_workers):
     print("Loading imagenet Data")
@@ -334,9 +352,11 @@ def main(args):
         checkpoint = torch.load(args.load_name)
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch']
+        print("Model is from epoch:{}".format(start_epoch))
         model.load_state_dict(checkpoint['model'])
         args.save_name = args.load_name
-
+    
+    print_sparse_model_params(model)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
     epoch = start_epoch
@@ -372,19 +392,21 @@ def main(args):
         args.prune_learning_rate  *= .1
         args.save_name = args.save_name + "_prune"
         accuracies = []
-        for epoch in range(start_epoch, start_epoch + 2):
+        for epoch in range(start_epoch, start_epoch + 0):
             acc = test(model, epoch, testloader, device, criterion, args, best_acc, prune_flag=True)
             accuracies.append((0, acc))
             train(model, epoch, trainloader, device, optimizer, criterion)
         print("Model Stabilized with accuracy:{}.\n Moving on to Prunning\n".format(best_acc))
-        
+        print_sparse_model_params(model)
+        acc = 0
         optimizer = optim.SGD(model.parameters(), lr=args.prune_learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
         print('Prune using Gradual Magnitude Pruning for using {}'.format(args.prune_method))
         args.save_name = args.save_name + args.prune_method
-        acc = test(model, start_epoch, testloader, device, criterion, args, best_acc, prune_flag=True)
+        #acc = test(model, start_epoch, testloader, device, criterion, args, best_acc, prune_flag=True)
         accuracies.append((0, acc))
         weight_sparcity = 0
         for i in range(1, prune_epochs+1):
+            print_sparse_model_params(model)
             target = float(args.prune_speed * i)
             sparcities = [[],[]]
             for module in model.module.features: # for VGG
@@ -440,11 +462,13 @@ def main(args):
                 if pruneable:
                     sparcities[1].append(get_module_weight_sparcity(module))  
             print("Weight Sparcity Before:{}.\nWeight Sparcity After{}.\n".format(np.average(sparcities[0]),np.average(sparcities[1])))
-            train(model, i, trainloader, device, optimizer, criterion)
-            accuracies.append((weight_sparcity, test(model, i, testloader, device, criterion, args, best_acc)))
+            #accuracies.append((weight_sparcity, test(model, i, testloader, device, criterion, args, best_acc)))
+            #train(model, i, trainloader, device, optimizer, criterion)
+            #accuracies.append((weight_sparcity, test(model, i, testloader, device, criterion, args, best_acc)))
         
 
         print("Done Prunning. Now Stabilizing for 10 epochs")
+        print_sparse_model_params(model)
         args.prune_learning_rate  *= .1
         args.save_name = args.save_name + "_stabilized"
         optimizer = optim.SGD(model.parameters(), lr=args.prune_learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
